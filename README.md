@@ -9,6 +9,7 @@ It aggregates multi-domain open-source data, normalizes and enriches it, applies
 ---
 
 ## Table of Contents
+- [MVP Development Steps](#mvp-development-steps)
 - [Data Sources](#data-sources)
 - [Ingestion Layer](#ingestion-layer)
 - [Message Bus (Kafka)](#message-bus-kafka)
@@ -18,10 +19,64 @@ It aggregates multi-domain open-source data, normalizes and enriches it, applies
 - [Machine Learning](#machine-learning)
 - [Observability & Compliance](#observability--compliance)
 - [JSON Event Schema](#json-event-schema)
-- [MVP Development Steps](#mvp-development-steps)
 - [Future Enhancements](#future-enhancements)
 
 ---
+
+## MVP Development Steps
+
+1. **Select Core Data Sources**  
+   Choose 3 to 5 high-impact, reliable OSINT sources to start with, such as:  
+   - USGS Earthquake API (natural disasters)  
+   - ACLED (protests, conflicts)  
+   - GDACS (disaster alerts)  
+   - Twitter API (social media signals)  
+   - Liveuamap (real-time event mapping)  
+
+2. **Implement Async Ingestion Collectors**  
+   Develop Python async collectors using `aiohttp` or `httpx` to fetch data continuously from chosen sources.  
+   Publish raw events to Kafka topic `raw-events` with source metadata and timestamps.  
+   Include error handling, retries, and logging.
+
+3. **Define & Implement JSON Normalization Processor**  
+   Build a Kafka consumer service to:  
+   - Parse raw payloads  
+   - Map source-specific fields to a common event schema (timestamps, location, categories)  
+   - Validate schema compliance  
+   - Publish normalized events to `normalized-events` topic  
+   - Route malformed or incomplete data to dead-letter queue for review
+
+4. **Add Enrichment Layer**  
+   Create a stream processor to:  
+   - Perform Named Entity Recognition (NER) on event descriptions  
+   - Geocode location names into coordinates using Pelias/Nominatim  
+   - Detect language and translate non-English text to English (e.g., MarianMT)  
+   - Generate semantic embeddings for advanced search capabilities  
+   - Publish enriched events to `enriched-events` topic
+
+5. **Persist Data in Databases**  
+   - Insert normalized and enriched events into TimescaleDB for time-series analytics and historical queries  
+   - Index event data in Elasticsearch for fast full-text and geospatial search  
+   - Ensure data consistency with transactional writes and retries
+
+6. **Build Minimal Streamlit Dashboard**  
+   Develop a simple web dashboard with:  
+   - Interactive map showing events by category and severity  
+   - Filters by date range, location, and event type  
+   - Event list with clickable details and source links  
+   - Real-time updates consuming from Elasticsearch or TimescaleDB
+
+7. **Develop Baseline Machine Learning Models**  
+   - Train a multi-class classifier to categorize events by domain (e.g., disaster, protest, cyber)  
+   - Implement a severity scoring model based on historical data, location risk factors, and event text  
+   - Integrate ML inference into the enrichment or scoring stream processor  
+   - Store scores alongside event data for filtering and alerting
+
+8. **Configure Alerting Mechanisms**  
+   - Set thresholds on severity scores or event types for alert generation  
+   - Integrate alert dispatch to Slack and Telegram channels via bot APIs  
+   - Include event summaries, location maps, and source references in alert messages  
+   - Implement alert deduplication and rate limiting to avoid spam
 
 ## Data Sources
 
@@ -272,6 +327,61 @@ This layered approach ensures users from analysts to data scientists and stakeho
 
 ---
 
+### Cross-Platform Implementation
+
+To provide seamless user experiences across multiple platforms, the Applications Layer supports the following deployment paths:
+
+#### Website
+
+- **Technology:** React + Mapbox or Streamlit web apps  
+- **Deployment:** Host on cloud platforms (e.g., AWS, Azure, Netlify) with HTTPS support  
+- **Data Integration:**  
+  - Consume backend REST APIs or WebSocket streams for real-time event data and alerts  
+  - Support user authentication and role-based access control (RBAC)  
+- **Features:**  
+  - Interactive geospatial maps with filters by category, severity, source, and time  
+  - Live event tables with sorting and searching  
+  - Access to raw sources and media attachments  
+  - In-browser alert notifications and history  
+
+#### Android App
+
+- **Technology:** Native (Kotlin/Java) or cross-platform (React Native, Flutter)  
+- **Data Integration:**  
+  - Connect with backend REST APIs/WebSocket for live updates  
+  - Push notifications via Firebase Cloud Messaging (FCM) for alerts  
+- **Features:**  
+  - Mobile-optimized interactive maps with touch gestures  
+  - Event feeds with filtering and search capabilities  
+  - Alert subscription management with custom thresholds  
+  - Offline caching of recent data for intermittent connectivity  
+
+#### Desktop Application (.exe)
+
+- **Technology Options:**  
+  - Electron app wrapping the React dashboard for cross-platform desktop support  
+  - Native desktop app using frameworks like .NET (C#) or Qt (C++) for Windows  
+- **Deployment:**  
+  - Distribute as standalone `.exe` installer or portable app  
+  - Integrate with system notifications for alert delivery  
+- **Features:**  
+  - Full-featured dashboard with real-time map visualizations and filtering  
+  - Persistent local cache with data sync on connectivity  
+  - User authentication and secure storage of credentials  
+  - Audit trail and event export capabilities  
+
+---
+
+### Shared Backend Services
+
+- All platforms rely on unified backend APIs providing:  
+  - Authenticated data access and role-based permissions  
+  - Real-time streaming via WebSocket or Kafka consumers  
+  - Alert management and deduplication logic  
+- This architecture ensures consistent data, alerting, and user experience across devices.
+
+---
+
 ## Machine Learning
 
 - **Classification:**  
@@ -381,60 +491,6 @@ This layered approach ensures users from analysts to data scientists and stakeho
   ]
 }
 ```
-## MVP Development Steps
-
-1. **Select Core Data Sources**  
-   Choose 3 to 5 high-impact, reliable OSINT sources to start with, such as:  
-   - USGS Earthquake API (natural disasters)  
-   - ACLED (protests, conflicts)  
-   - GDACS (disaster alerts)  
-   - Twitter API (social media signals)  
-   - Liveuamap (real-time event mapping)  
-
-2. **Implement Async Ingestion Collectors**  
-   Develop Python async collectors using `aiohttp` or `httpx` to fetch data continuously from chosen sources.  
-   Publish raw events to Kafka topic `raw-events` with source metadata and timestamps.  
-   Include error handling, retries, and logging.
-
-3. **Define & Implement JSON Normalization Processor**  
-   Build a Kafka consumer service to:  
-   - Parse raw payloads  
-   - Map source-specific fields to a common event schema (timestamps, location, categories)  
-   - Validate schema compliance  
-   - Publish normalized events to `normalized-events` topic  
-   - Route malformed or incomplete data to dead-letter queue for review
-
-4. **Add Enrichment Layer**  
-   Create a stream processor to:  
-   - Perform Named Entity Recognition (NER) on event descriptions  
-   - Geocode location names into coordinates using Pelias/Nominatim  
-   - Detect language and translate non-English text to English (e.g., MarianMT)  
-   - Generate semantic embeddings for advanced search capabilities  
-   - Publish enriched events to `enriched-events` topic
-
-5. **Persist Data in Databases**  
-   - Insert normalized and enriched events into TimescaleDB for time-series analytics and historical queries  
-   - Index event data in Elasticsearch for fast full-text and geospatial search  
-   - Ensure data consistency with transactional writes and retries
-
-6. **Build Minimal Streamlit Dashboard**  
-   Develop a simple web dashboard with:  
-   - Interactive map showing events by category and severity  
-   - Filters by date range, location, and event type  
-   - Event list with clickable details and source links  
-   - Real-time updates consuming from Elasticsearch or TimescaleDB
-
-7. **Develop Baseline Machine Learning Models**  
-   - Train a multi-class classifier to categorize events by domain (e.g., disaster, protest, cyber)  
-   - Implement a severity scoring model based on historical data, location risk factors, and event text  
-   - Integrate ML inference into the enrichment or scoring stream processor  
-   - Store scores alongside event data for filtering and alerting
-
-8. **Configure Alerting Mechanisms**  
-   - Set thresholds on severity scores or event types for alert generation  
-   - Integrate alert dispatch to Slack and Telegram channels via bot APIs  
-   - Include event summaries, location maps, and source references in alert messages  
-   - Implement alert deduplication and rate limiting to avoid spam
 
 ---
 
