@@ -2,7 +2,7 @@
 
 ## Overview
 The **Global Risk Intelligence Platform** is an OSINT-driven, real-time data collection and analytics system for global risk monitoring.  
-It ingests events from multiple open sources (military conflicts, protests, climate disasters, industrial accidents, cyber incidents, etc.), enriches and standardizes them, stores them for historical analysis, applies machine learning for classification and risk prediction, and provides real-time visualization and alerting.
+It ingests events from multiple open sources (military conflicts, protests, climate disasters, industrial accidents, cyber incidents, etc.), enriches and standardizes them, stores them for historical analysis, applies machine learning for classification and risk prediction, and provides real-time visualization and alerting. The final output of the project would be to be usable both on android app, website and .exe structures.
 
 The goal: **turn scattered public data into structured, actionable intelligence**.
 
@@ -41,14 +41,17 @@ ML scoring) S3/MinIO) Integrations)
   - [USGS Earthquake API](https://earthquake.usgs.gov/fdsnws/event/1/)
   - [NOAA Weather API](https://www.weather.gov/documentation/services-web-api)
   - [GDACS API](https://www.gdacs.org/)
-- **Conflict & Protest Feeds**:
+  - etc.
+- **Conflict & Protest Feeds (Geopolitical Scale)**:
   - [ACLED API](https://acleddata.com/)
   - [GDELT Project API](https://www.gdeltproject.org/)
   - Liveuamap (non-official API)
+  - etc.
 - **Social Media**:
   - Twitter/X API (filtered stream)
   - Reddit API
   - Mastodon instances (ActivityPub)
+    (filtered by keywords)
 - **RSS / News**:
   - Crisis Group, humanitarian reports, security blogs
 
@@ -195,9 +198,4 @@ ML scoring) S3/MinIO) Integrations)
 - Implement geospatial risk propagation models
 
 ---
-
-## License
-
-TBD – choose a license that matches your intended use and data compliance requirements.
-
 
