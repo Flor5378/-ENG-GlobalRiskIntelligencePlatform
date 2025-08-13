@@ -1,4 +1,5 @@
 # Global Risk Intelligence Platform
+/by Florian GROLLEAU 2025/
 
 ## Overview
 The **Global Risk Intelligence Platform** is an OSINT-driven, real-time data ingestion, processing, storage, and alerting system for monitoring global risks such as natural disasters, protests, armed conflicts, industrial accidents, cyber incidents, and more.  
